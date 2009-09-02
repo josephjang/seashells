@@ -1,0 +1,60 @@
+=head1 SYNOPSIS
+
+  jstack-aggregate /path/to/backtrace
+
+=head1 OPTIONS
+
+=over
+
+=item -n
+
+Aggregate by only the first N lines of each trace. (currently not supported)
+
+=back
+
+=head1 AUTHOR
+
+Joseph Jang
+
+=head1 LICENSE
+
+This software is released to the public domain, with no guarantees whatsoever.
+
+=cut
+use strict;
+use warnings FATAL => 'all';
+use English qw(-no_match_vars);
+
+# Look for command-line arguments to see if we're supposed to aggregate by only
+# the first few lines of each stack trace.
+#my $n_lines = 0;
+#if ( @ARGV && $ARGV[0] =~ m/^-\d/ ) {
+#   my $arg = shift @ARGV;
+#   ($n_lines) = $arg =~ m/(\d+)/;
+#}
+
+local $INPUT_RECORD_SEPARATOR = ''; # Paragraph mode
+
+my %traces;
+
+while ( my $chunk = <> ) {
+   next unless my ( $tid ) = $chunk =~ m/tid=/;
+   $chunk =~ s/.*tid=.*$//m;                  # Delete first line
+   $chunk =~ s/.*java.lang.Thread.State:.*$//m;                  # Delete second line
+   $chunk =~ s/locked <.*>/locked <******>/mg;
+   $chunk =~ s/lock <.*>/lock <******>/mg;
+#   $chunk =~ s/#$n_lines\s.*//s if $n_lines;    # Delete all but first N lines
+   $chunk =~ s/(\A\s+)|(\s+\Z)//g;              # Trim whitespace
+   $traces{$chunk}->{count}++;
+   push @{$traces{$chunk}->{tids}}, $tid;
+}
+
+foreach my $trace (
+   reverse sort { $traces{$a}->{count} <=> $traces{$b}->{count} } keys %traces
+) {
+   print $traces{$trace}->{count}, " threads with the following stack trace:\n";
+   # print "\t ", join(",", @{$traces{$trace}->{tids}}), "\n";
+   $trace =~ s/^/\t/gm;
+   print $trace, "\n\n";
+}
+
