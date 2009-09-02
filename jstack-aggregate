@@ -1,3 +1,5 @@
+#! /usr/bin/env perl
+
 =head1 SYNOPSIS
 
   jstack-aggregate /path/to/backtrace
