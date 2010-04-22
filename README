@@ -4,7 +4,7 @@ INTRODUCTION
 
 SEASHELLS
 
-java-aggregate - Aggregate and print Java backtraces.
+jstack-aggregate - Aggregate and print Java backtraces.
 
 LICENSE
 
